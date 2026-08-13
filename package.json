@@ -6,6 +6,10 @@
 	"keywords": [],
 	"license": "MIT",
 	"main": "main.js",
+	"scripts": {
+		"build": "node .esbuild.mjs",
+		"build:prod": "node .esbuild.mjs production"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "latest",
 		"@types/node": "^22.5.5",
