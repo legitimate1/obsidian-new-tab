@@ -10,6 +10,7 @@ Fork 自 [chrisgrieser/new-tab-default-page](https://github.com/chrisgrieser/new
 - 支持指定笔记 / 每日笔记 / 随机引用 / Quick Switcher
 - 关闭最后一个 tab 时同样会打开指定页
 - 阅读模式 / 编辑模式可选
+- **i18n**：中英双语，设置界面语言跟随 Obsidian 自动切换（可手动指定）
 
 ## 安装
 
