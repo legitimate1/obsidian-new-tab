@@ -57,7 +57,7 @@ export default class defaultNewTabPage extends Plugin {
 			);
 		});
 
-		console.debug("New Tab Default Page Plugin loaded.");
+		console.debug("New Tab plugin loaded.");
 	}
 
 	async loadSettings() {
@@ -69,7 +69,7 @@ export default class defaultNewTabPage extends Plugin {
 	}
 
 	async onunload() {
-		console.debug("New Tab Default Page Plugin unloaded.");
+		console.debug("New Tab plugin unloaded.");
 	}
 
 	checkForNewTab(existingLeaves: WeakSet<WorkspaceLeaf>) {

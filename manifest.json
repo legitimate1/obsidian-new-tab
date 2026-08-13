@@ -1,11 +1,10 @@
 {
-	"id": "new-tab-default-page",
-	"name": "Default New Tab Page",
+	"id": "new-tab",
+	"name": "New Tab",
 	"version": "0.11.9",
 	"minAppVersion": "1.0.0",
 	"description": "Open a note of your choice when creating a new tab, like in the browser.",
-	"author": "Chris Grieser (aka pseudometa)",
-	"fundingUrl": "https://ko-fi.com/pseudometa",
-	"authorUrl": "https://chris-grieser.de/",
+	"author": "legitimate1",
+	"authorUrl": "https://github.com/legitimate1",
 	"isDesktopOnly": false
 }
