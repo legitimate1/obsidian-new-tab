@@ -1,6 +1,7 @@
 // DOCS https://marcus.se.net/obsidian-plugin-docs/user-interface/settings#register-a-settings-tab
 import { App, PluginSettingTab, Setting } from "obsidian";
 import defaultNewTabPage from "./main";
+import { LANG_OPTIONS, type Lang } from "./i18n";
 
 export class DefaultNewTabPageSettingTab extends PluginSettingTab {
 	plugin: defaultNewTabPage;
@@ -12,30 +13,37 @@ export class DefaultNewTabPageSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
+		const t = this.plugin.t;
 
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("New tab opens…")
-			.setDesc(
-				"What to open when a new tab is created. (Except for the new tab page, the respective plugin needs to be enabled.)",
-			)
+			.setName(t.settings.language)
+			.setDesc(t.settings.languageDesc)
 			.addDropdown((dropdown) => {
+				dropdown
+					.addOption("auto", `auto (${LANG_OPTIONS[this.plugin.uiLang]})`)
+					.addOptions(LANG_OPTIONS)
+					.setValue(this.plugin.settings.language)
+					.onChange(async (value) => {
+						this.plugin.settings.language = value as Lang | "auto";
+						await this.plugin.saveSettings();
+						this.display(); // 切换语言立即生效
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t.settings.newTabOpens)
+			.setDesc(t.settings.newTabOpensDesc)
+			.addDropdown((dropdown) => {
+				const options: Record<string, string> = {};
+				for (const [id, label] of Object.entries(t.whatToOpenOptions)) {
+					options[id] = label;
+				}
 				dropdown
 					// INFO: except for the new tab page, the values should be equal to
 					// the command-id to run
-					.addOptions({
-						"new-tab-page": "New Tab Page",
-						"daily-notes": "Daily Note (Core Plugin)",
-						"periodic-notes:open-daily-note": "Daily Note (Periodic Notes Plugin)",
-						"periodic-notes:open-weekly-note": "Weekly Note (Periodic Notes Plugin)",
-						"periodic-notes:open-monthly-note": "Monthly Note (Periodic Notes Plugin)",
-						"random-note": "Random Note (Core Plugin)",
-						"switcher:open": "Quick Switcher (Core Plugin)",
-						"obsidian-another-quick-switcher:search-command_recent-search":
-							"Another Quick Switcher",
-						"darlal-switcher-plus:switcher-plus:open": "Quick Switcher++",
-					})
+					.addOptions(options)
 					.setValue(this.plugin.settings.whatToOpen)
 					.onChange(async (value) => {
 						this.plugin.settings.whatToOpen = value;
@@ -44,10 +52,8 @@ export class DefaultNewTabPageSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Default new tab page")
-			.setDesc(
-				"Path of the note that will be opened in new tabs. Images and PDFs also work. Only takes effect when the setting above is 'New Tab Page'.",
-			)
+			.setName(t.settings.defaultNewTabPage)
+			.setDesc(t.settings.defaultNewTabPageDesc)
 			.addText((text) =>
 				text
 					.setPlaceholder("Meta/Homepage.md")
@@ -59,16 +65,15 @@ export class DefaultNewTabPageSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Mode")
-			.setDesc("Select the mode in which the default new tab page will be opened.")
+			.setName(t.settings.mode)
+			.setDesc(t.settings.modeDesc)
 			.addDropdown((dropdown) => {
+				const options: Record<string, string> = {};
+				for (const [id, label] of Object.entries(t.modeOptions)) {
+					options[id] = label;
+				}
 				dropdown
-					.addOptions({
-						"obsidian-default": "Obsidian Default",
-						"live-preview": "Live Preview",
-						"reading-mode": "Reading Mode",
-						"source-mode": "Source Mode",
-					})
+					.addOptions(options)
 					.setValue(this.plugin.settings.mode)
 					.onChange(async (value) => {
 						this.plugin.settings.mode = value;
@@ -77,10 +82,8 @@ export class DefaultNewTabPageSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(this.containerEl)
-			.setName("Compatibility mode")
-			.setDesc(
-				"Enable compatibility mode for other plugins (e.g. Obsidian Projects) which open new tabs. This introduces minor delays.",
-			)
+			.setName(t.settings.compatibilityMode)
+			.setDesc(t.settings.compatibilityModeDesc)
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.compatibilityMode).onChange(async (value) => {
 					this.plugin.settings.compatibilityMode = value;

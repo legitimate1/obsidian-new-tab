@@ -1,20 +1,19 @@
 # ============================================================================
 # Obsidian 插件一键部署脚本（new-tab）
 # 用法：
-#   ./deploy.ps1           # 构建 + 部署（默认不重载，安全）
-#   ./deploy.ps1 -Reload   # 构建 + 部署 + 重载（可安全重载的插件一条龙）
+#   ./deploy.ps1             # 构建 + 部署 + 重载（一条龙，默认）
+#   ./deploy.ps1 -NoReload   # 构建 + 部署（不重载）
 #   ./deploy.ps1 -SkipBuild  # 跳过构建（只部署/重载现有产物）
 #
 # 语义约定：
 #   - deploy = 构建 + 复制到 vault（放到运行位置）
 #   - reload = 激活新产物（disable/enable，触发 onload）
-#   - 重载是显式动作（-Reload），默认不执行——部分插件无法安全自动重载
-#     （数据迁移/核心行为改动），需人工确认
+#   - 模式：一条龙（默认重载），2026-08-13 用户确认
 # ============================================================================
 
 param(
-    [switch]$Reload,
-    [switch]$SkipBuild
+    [switch]$NoReload,   # 跳过重载（只部署）
+    [switch]$SkipBuild   # 跳过构建（只部署/重载现有产物）
 )
 
 $ErrorActionPreference = 'Stop'
@@ -59,8 +58,8 @@ Copy-Item "$ProjectRoot\main.js"       $PluginDir -Force
 Write-Host "    已复制 main.js / manifest.json / styles.css"
 Write-Host "    （data.json 保留，不影响配置）" -ForegroundColor DarkGray
 
-# ---------- 3. 重载（显式，-Reload 才执行）----------
-if ($Reload) {
+# ---------- 3. 重载（一条龙模式：默认重载，-NoReload 跳过）----------
+if (-not $NoReload) {
     Write-Host "==> [3/3] 重载插件..." -ForegroundColor Cyan
     Invoke-CdpEval "app.plugins.disablePlugin(`"$PluginId`")"
     Start-Sleep -Milliseconds 800
@@ -70,7 +69,7 @@ if ($Reload) {
     $status = Invoke-CdpEval 'JSON.stringify({enabled: app.plugins.enabledPlugins.has("new-tab"), loaded: !!app.plugins.plugins["new-tab"]})'
     Write-Host "    状态: $status" -ForegroundColor Green
 } else {
-    Write-Host "==> [3/3] 跳过重载（下次打开 Obsidian 自动加载新版本；或 ./deploy.ps1 -Reload）" -ForegroundColor DarkGray
+    Write-Host "==> [3/3] 跳过重载（下次打开 Obsidian 自动加载新版本；或 ./deploy.ps1）" -ForegroundColor DarkGray
 }
 
 Write-Host "完成 ✔" -ForegroundColor Green

@@ -1,5 +1,6 @@
-import { Notice, Plugin, WorkspaceLeaf } from "obsidian";
+import { moment, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 import { DefaultNewTabPageSettingTab } from "./settings";
+import { detectLang, getDict, type Dict, type Lang, type LangSetting } from "./i18n";
 
 // add type safety for the undocumented methods
 declare module "obsidian" {
@@ -21,6 +22,7 @@ interface DefaultNewTabPageSettings {
 	filePath: string;
 	mode: string;
 	compatibilityMode: boolean;
+	language: LangSetting;
 }
 
 const DEFAULT_SETTINGS: Partial<DefaultNewTabPageSettings> = {
@@ -28,14 +30,15 @@ const DEFAULT_SETTINGS: Partial<DefaultNewTabPageSettings> = {
 	filePath: "",
 	mode: "obsidian-default",
 	compatibilityMode: false,
+	language: "auto",
 };
 
 //──────────────────────────────────────────────────────────────────────────────
 
 export default class defaultNewTabPage extends Plugin {
-	settings: DefaultNewTabPageSettings;
+	settings!: DefaultNewTabPageSettings;
 
-	async onload() {
+	override async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new DefaultNewTabPageSettingTab(this.app, this));
 		const { workspace } = this.app;
@@ -64,11 +67,21 @@ export default class defaultNewTabPage extends Plugin {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
+	/** Obsidian 界面语言（moment.locale），如 "zh-cn" / "en" */
+	get uiLang(): Lang {
+		return detectLang(this.settings.language, moment.locale());
+	}
+
+	/** 当前语言的字典 */
+	get t(): Dict {
+		return getDict(this.uiLang);
+	}
+
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
 
-	async onunload() {
+	override async onunload() {
 		console.debug("New Tab plugin unloaded.");
 	}
 
@@ -91,7 +104,7 @@ export default class defaultNewTabPage extends Plugin {
 			if (!this.tabIsEmpty(leaf)) return;
 			const commandExists = this.app.commands.executeCommandById(commandId);
 			const success = commandExists !== false; // INFO on success, commandExists is undefined, otherwise false
-			if (!success) new Notice("Plugin for the New Tab Page is not enabled.");
+			if (!success) new Notice(this.t.notices.pluginNotEnabled);
 		}, delay);
 	}
 
@@ -120,9 +133,8 @@ export default class defaultNewTabPage extends Plugin {
 		if (!newTabPage) return;
 
 		const tFiletoOpen = this.app.metadataCache.getFirstLinkpathDest(newTabPage, "/"); // `getFirstLinkpathDest` more reliably finds match than `getAbstractFileByPath`, e.g. with missing file extensions
-		const pathIsValid = Boolean(tFiletoOpen);
-		if (!pathIsValid) {
-			new Notice(`${newTabPage} is not a valid path to a note in your vault.`);
+		if (!tFiletoOpen) {
+			new Notice(this.t.notices.invalidPath(newTabPage));
 			return;
 		}
 
@@ -135,6 +147,7 @@ export default class defaultNewTabPage extends Plugin {
 
 	setViewMode(leaf: WorkspaceLeaf, targetMode: string) {
 		const view = leaf.getViewState();
+		view.state ??= {};
 		if (targetMode === "source-mode") {
 			view.state.mode = "source";
 			view.state.source = true;
